@@ -7,6 +7,7 @@ from world_kit.object import Object
 from world_kit.object import Container
 from world_kit.room import Room
 from world_kit.room import Exit
+from world_kit.level import Level
 
 def debug1(s):
     if Globals.debug > 0:

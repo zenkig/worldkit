@@ -26,4 +26,4 @@ class Globals(object):
     debug = 0
 
     def __init__(self):
-        raise Error, 'do not instantiate world_kit.Globals'
+        raise Exception, 'do not instantiate world_kit.Globals'

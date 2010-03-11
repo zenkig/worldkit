@@ -9,6 +9,7 @@ game level, and cycle the main event loop.
 ## Python imports
 from optparse import OptionParser
 import os
+import sys
 
 try:
     ## Pygame imports
@@ -49,15 +50,20 @@ def run():
     debug1('game.run start')
     init()
     running = True
-    level = level1
+    level = level1.Level()
+    level.start()
     
     while running:
         command = raw_input('> ')
         if len(command) == 0:
             pass
-        elif command in Globals.current_room.exits():
+        elif command in Globals.current_room.exits:
             Globals.current_room.exit(command).use()
         elif command.startswith('q'):
+            running = False
+        
+        if level.complete:
+            level.finish()
             running = False
     
     print 'Goodbye.'
