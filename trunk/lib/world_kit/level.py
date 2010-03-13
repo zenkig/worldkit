@@ -22,6 +22,7 @@ class Level(world_kit.Container):
         self._rooms = {}
         self._exits = []
         self._start_room = None
+        self._room = None
 
     ############################################################################
     # Properties
@@ -57,7 +58,7 @@ class Level(world_kit.Container):
         self._add_exit(world_kit.Exit(rooms=(room1, name1, room2, name2)))
 
     def _add_room(self, room, name):
-        self._room[name] = room
+        self._rooms[name] = room
 
     def _add_exit(self, exit):
         self._exits.append(exit)
