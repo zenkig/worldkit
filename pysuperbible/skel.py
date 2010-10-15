@@ -15,6 +15,7 @@ from OpenGL.GLUT import *
 sys.path.append('../../lib')
 from gltools import *
 from math3d import *
+from glframe import GLFrame
 
 
 def vecf(*args):

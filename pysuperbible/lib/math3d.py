@@ -112,14 +112,13 @@ class _M3DVector(object):
     def long(self): return [long(i) for i in self.__data]
 
 
-#///////////////////////////////////////////////////////////////////////////////
-#// Data structures and containers
-#// Much thought went into how these are declared. Many libraries declare these
-#// as structures with x, y, z data members. However structure alignment issues
-#// could limit the portability of code based on such structures, or the binary
-#// compatibility of data files (more likely) that contain such structures across
-#// compilers/platforms. Arrays are always tightly packed, and are more efficient 
-#// for moving blocks of data around (usually).
+# Data structures and containers
+# Much thought went into how these are declared. Many libraries declare these
+# as structures with x, y, z data members. However structure alignment issues
+# could limit the portability of code based on such structures, or the binary
+# compatibility of data files (more likely) that contain such structures across
+# compilers/platforms. Arrays are always tightly packed, and are more efficient 
+# for moving blocks of data around (usually).
 #typedef float	M3DVector3f[3];		// Vector of three floats (x, y, z)
 #typedef double	M3DVector3d[3];		// Vector of three doubles (x, y, z)
 class M3DVector3f(_M3DVector):
@@ -265,10 +264,10 @@ class M3DVector2d(_M3DVector):
         self[1] = v
 
 
-#// 3x3 matrix - column major. X vector is 0, 1, 2, etc.
-#//		0	3	6	
-#//		1	4	7
-#//		2	5	8
+# 3x3 matrix - column major. X vector is 0, 1, 2, etc.
+#		0	3	6	
+#		1	4	7
+#		2	5	8
 class M3DMatrix33f(_M3DVector):
     __slots__ = 'abcdefghi'
     def __init__(self, *args):
@@ -278,11 +277,11 @@ class M3DMatrix33d(_M3DVector):
     def __init__(self, *args):
         _M3DVector.__init__(self, 9, *args)
 
-#// 4x4 matrix - column major. X vector is 0, 1, 2, etc.
-#//	0	4	8	12
-#//	1	5	9	13
-#//	2	6	10	14
-#//	3	7	11	15
+# 4x4 matrix - column major. X vector is 0, 1, 2, etc.
+#	0	4	8	12
+#	1	5	9	13
+#	2	6	10	14
+#	3	7	11	15
 class M3DMatrix44f(_M3DVector):
     __slots__ = 'abcdefghijklmnop'
     def __init__(self, *args):
@@ -292,38 +291,35 @@ class M3DMatrix44d(_M3DVector):
     def __init__(self, *args):
         _M3DVector.__init__(self, 16, *args)
 
-#///////////////////////////////////////////////////////////////////////////////
-#// Useful constants
+# Useful constants
 M3D_PI = math.pi
 M3D_2PI = 2.0 * math.pi
 M3D_PI_DIV_180 = math.pi / 180.0
 M3D_INV_PI_DIV_180 = 180.0 / math.pi
 
-#///////////////////////////////////////////////////////////////////////////////
-#// Useful shortcuts and macros
-#// Radians are king... but we need a way to swap back and forth
+# Useful shortcuts and macros
+# Radians are king... but we need a way to swap back and forth
 m3dDegToRad = lambda x: x * M3D_PI_DIV_180
 m3dRadToDeg = lambda x: x * M3D_INV_PI_DIV_180
 
-#// Hour angles
+# Hour angles
 m3dHrToDeg = lambda x: x * 15.0
 m3dHrToRad = lambda x: m3dDegToRad(m3dHrToDeg(x))
 
 m3dDegToHr = lambda x: x / 15.0
 m3dRadToHr = lambda x: m3dDegToHr(m3dRadToDeg(x))
 
-#// Returns the same number if it is a power of
-#// two. Returns a larger integer if it is not a 
-#// power of two. The larger integer is the next
-#// highest power of two.
+# Returns the same number if it is a power of
+# two. Returns a larger integer if it is not a 
+# power of two. The larger integer is the next
+# highest power of two.
 def m3dIsPOW2(iValue):
     nPow2 = 1
     while iValue > nPow2:
         nPow2 = nPow2 << 1
     return nPow2
 
-#///////////////////////////////////////////////////////////////////////////////
-#// Inline accessor functions for people who just can't count to 3 - Vectors
+# Inline accessor functions for people who just can't count to 3 - Vectors
 m3dGetVectorX = lambda v: v[0]
 m3dGetVectorY = lambda v: v[1]
 m3dGetVectorZ = lambda v: v[2]
@@ -334,21 +330,18 @@ def m3dSetVectorY(v, y): v[1] = y
 def m3dSetVectorZ(v, z): v[2] = z
 def m3dSetVectorW(v, w): v[3] = w
 
-#///////////////////////////////////////////////////////////////////////////////
-#// Inline vector functions
-#// Load Vector with (x, y, z, w).
+# Inline vector functions
+# Load Vector with (x, y, z, w).
 def m3dLoadVector2(v, x, y): v[:] = x,y
 def m3dLoadVector3(v, x, y, z): v[:] = x,y,z
 def m3dLoadVector4(v, x, y, z, w): v[:] = x,y,z,w
 
-#////////////////////////////////////////////////////////////////////////////////
-#// Copy vector src into vector dst
+# Copy vector src into vector dst
 def m3dCopyVector2(dst, src): dst[:] = src[:]
 def m3dCopyVector3(dst, src): dst[:] = src[:]
 def m3dCopyVector4(dst, src): dst[:] = src[:]
 
-#////////////////////////////////////////////////////////////////////////////////
-#// Add Vectors (r, a, b) r = a + b
+# Add Vectors (r, a, b) r = a + b
 def m3dAddVectors2(r, a, b):
     r[:] = [a[i]+b[i] for i in range(len(a))]
 def m3dAddVectors3(r, a, b):
@@ -356,8 +349,7 @@ def m3dAddVectors3(r, a, b):
 def m3dAddVectors4(r, a, b):
     r[:] = [a[i]+b[i] for i in range(len(a))]
 
-#////////////////////////////////////////////////////////////////////////////////
-#// Subtract Vectors (r, a, b) r = a - b
+# Subtract Vectors (r, a, b) r = a - b
 def m3dSubtractVectors2(r, a, b):
     r[:] = [a[i]-b[i] for i in range(len(a))]
 def m3dSubtractVectors3(r, a, b):
@@ -365,8 +357,7 @@ def m3dSubtractVectors3(r, a, b):
 def m3dSubtractVectors4(r, a, b):
     r[:] = [a[i]-b[i] for i in range(len(a))]
 
-#///////////////////////////////////////////////////////////////////////////////////////
-#// Scale Vectors (in place)
+# Scale Vectors (in place)
 def m3dScaleVectors2(v, scale):
     v[:] = [n*scale for n in v]
 def m3dScaleVectors3(v, scale):
@@ -374,27 +365,24 @@ def m3dScaleVectors3(v, scale):
 def m3dScaleVectors4(v, scale):
     v[:] = [n*scale for n in v]
 
-#//////////////////////////////////////////////////////////////////////////////////////
-#// Cross Product - computes the vector perpendicular to the plane defined by two
-#// vectors.
-#// u x v = result
-#// We only need one version for floats, and one version for doubles. A 3 component
-#// vector fits in a 4 component vector. If  M3DVector4d or M3DVector4f are passed
-#// we will be OK because 4th component is not used.
+# Cross Product - computes the vector perpendicular to the plane defined by two
+# vectors.
+# u x v = result
+# We only need one version for floats, and one version for doubles. A 3 component
+# vector fits in a 4 component vector. If  M3DVector4d or M3DVector4f are passed
+# we will be OK because 4th component is not used.
 def m3dCrossProduct(result, u, v):
     result[0] = u[1]*v[2] - v[1]*u[2]
     result[1] = -u[0]*v[2] + v[0]*u[2]
     result[2] = u[0]*v[1] - v[0]*u[1]
 
-#//////////////////////////////////////////////////////////////////////////////////////
-#// Dot Product, only for three component vectors - returns the cosine between two
-#// vectors.
-#// return u dot v
+# Dot Product, only for three component vectors - returns the cosine between two
+# vectors.
+# return u dot v
 def m3dDotProduct(u, v):
     return u[0]*v[0] + u[1]*v[1] + u[2]*v[2]
 
-#///////////////////////////////////////////////////////////////////////////////////////
-#// Scale Vectors (in place)
+# Scale Vectors (in place)
 def m3dScaleVector2(v, scale):
     v[:] = [n * scale for n in v]
 def m3dScaleVector3(v, scale):
@@ -402,32 +390,27 @@ def m3dScaleVector3(v, scale):
 def m3dScaleVector4(v, scale):
     v[:] = [n * scale for n in v]
 
-#//////////////////////////////////////////////////////////////////////////////////////
-#// Angle between vectors, only for three component vectors. Angle is in radians...
+# Angle between vectors, only for three component vectors. Angle is in radians...
 def m3dGetAngleBetweenVectors(u, v):
     d = m3dDotProduct(u, v)
     return acos(d)
 
-#//////////////////////////////////////////////////////////////////////////////////////
-#// Get Square of a vectors length
-#// Only for three component vectors
+# Get Square of a vectors length
+# Only for three component vectors
 def m3dGetVectorLengthSquared(u):
     return (u[0] * u[0]) + (u[1] * u[1]) + (u[2] * u[2])
 
-#//////////////////////////////////////////////////////////////////////////////////////
-#// Get length of vector
-#// Only for three component vectors.
+# Get length of vector
+# Only for three component vectors.
 def m3dGetVectorLength(u):
     return sqrt(m3dGetVectorLengthSquared(u))
 
-#//////////////////////////////////////////////////////////////////////////////////////
-#// Normalize a vector
-#// Scale a vector to unit length. Easy, just scale the vector by it's length
+# Normalize a vector
+# Scale a vector to unit length. Easy, just scale the vector by it's length
 def m3dNormalizeVector(u):
     m3dScaleVector3(u, 1.0 / m3dGetVectorLength(u))
 
-#/////////////////////////////////////////////////////////////////////////////
-#// Get/Set Column.
+# Get/Set Column.
 def m3dGetMatrixColumn33(dst, src, column):
     off = 3 * column
     dst[0:3] = src[off:off+3]
@@ -509,10 +492,9 @@ def m3dMakePlanarShadowMatrix(proj, planeEq, vLightPos):
     proj[15] = a * dx + b * dy + c * dz
     # Shadow matrix ready
 
-#////////////////////////////////////////////////////////////
-#// LoadIdentity
-#// For 3x3 and 4x4 float and double matricies.
-#// 3x3 float
+# LoadIdentity
+# For 3x3 and 4x4 float and double matricies.
+# 3x3 float
 def m3dLoadIdentity33(m):
     # Don't be fooled, this is still column major
     identity = M3DMatrix33f(
@@ -531,8 +513,8 @@ def m3dLoadIdentity44(m):
         0.0, 0.0, 0.0, 1.0)
     m[:] = identity
 
-#// Transform - Does rotation and translation via a 4x4 matrix. Transforms
-#// a point or vector.
+# Transform - Does rotation and translation via a 4x4 matrix. Transforms
+# a point or vector.
 def m3dTransformVector3(vOut3f, v3f, m33f):
     vOut3f[0] = m33f[0] * v3f[0] + m33f[4] * v3f[1] + m33f[8] *  v3f[2] + m33f[12]
     vOut3f[1] = m33f[1] * v3f[0] + m33f[5] * v3f[1] + m33f[9] *  v3f[2] + m33f[13]
@@ -544,8 +526,7 @@ def m3dTransformVector4(vOut4f, v4f, m44f):
     vOut4f[2] = m44f[2] * v4f[0] + m44f[6] * v4f[1] + m44f[10] * v4f[2] + m44f[14] * v4f[3]
     vOut4f[3] = m44f[3] * v4f[0] + m44f[7] * v4f[1] + m44f[11] * v4f[2] + m44f[15] * v4f[3]
 
-#///////////////////////////////////////////////////////////////////////////////
-#// Creates a 3x3 rotation matrix, takes radians NOT degrees
+# Creates a 3x3 rotation matrix, takes radians NOT degrees
 def m3dRotationMatrix33(m, angle, x, z):
 
     s = float(sin(angle))
@@ -587,8 +568,7 @@ def m3dRotationMatrix33(m, angle, x, z):
     M33(2,1, (one_c * yz) + xs)
     M33(2,2, (one_c * zz) + c)
 
-#///////////////////////////////////////////////////////////////////////////////
-#// Creates a 4x4 rotation matrix, takes radians NOT degrees
+# Creates a 4x4 rotation matrix, takes radians NOT degrees
 def m3dRotationMatrix44(m, angle, x, y, z):
     s = float(sin(angle))
     c = float(cos(angle))
@@ -636,6 +616,28 @@ def m3dRotationMatrix44(m, angle, x, y, z):
     M(3,1, 0.0)
     M(3,2, 0.0)
     M(3,3, 1.0)
+
+# Calculates the normal of a triangle specified by the three points
+# p1, p2, and p3. Each pointer points to an array of three floats. The
+# triangle is assumed to be wound counter clockwise. 
+def m3dFindNormal(result, point1, point2, point3):
+    # Temporary vectors
+    v1 = M3DVector3f()
+    v2 = M3DVector3f()
+
+    # Calculate two vectors from the three points. Assumes counter clockwise
+    # winding!
+    v1[0] = point1[0] - point2[0]
+    v1[1] = point1[1] - point2[1]
+    v1[2] = point1[2] - point2[2]
+
+    v2[0] = point2[0] - point3[0]
+    v2[1] = point2[1] - point3[1]
+    v2[2] = point2[2] - point3[2]
+
+    # Take the cross product of the two vectors to get
+    # the normal vector.
+    m3dCrossProduct(result, v1, v2)
 
 
 if __name__ == '__main__':
