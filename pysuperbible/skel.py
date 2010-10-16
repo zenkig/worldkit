@@ -52,6 +52,7 @@ class Window(pyglet.window.Window):
         pyglet.clock.unschedule(self._update)
         super(Window, self).on_close()
 
+
 if __name__ == '__main__':
     window = Window(800, 600, 'Pyglet Skeleton')
     pyglet.app.run()
