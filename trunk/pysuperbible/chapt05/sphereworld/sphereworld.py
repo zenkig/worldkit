@@ -27,15 +27,31 @@ from math3d import *
 from glframe import GLFrame
 
 
-def vecf(*args):
-    """return ctypes array of GLfloat for Pyglet's OpenGL interface.
-    args -> Either vararg floats, or args[0] as an interable float container
-    If using module OpenGL.GL directly you don't need this conversion.
+def gl_vec(typ, *args):
+    """return ctypes array of GLwhatever for Pyglet's OpenGL interface. (This
+    seems to work for all types, but it does almost no type conversion. Just
+    think in terms of "C without type casting".)
+    typ -> ctype or GL name for ctype; see pyglet.gl.GLenum through GLvoid
+    args -> Either vararg, or args[0] as an iterable container
+    Examples:
+        # Float
+        ar = gl_vec(GLfloat, 0.0, 1.0, 0.0)
+        ar = gl_vec(GLfloat, [0.0, 1.0, 0.0])
+        # Unsigned byte
+        ar = gl_vec(GLubyte, 'a','b','c')
+        ar = gl_vec(GLubyte, 'abc')
+        ar = gl_vec(GLubyte, ['a','b','c'])
+        ar = gl_vec(GLubyte, 97, 98, 99)
     """
-    if len(args) > 1:
-        return (GLfloat * len(args))(*args)
+    if len(args) == 1:
+        if isinstance(args[0],(tuple,list)):
+            args = args[0]
+        elif isinstance(args[0],str) and len(args[0]) > 1:
+            args = args[0]
+    if isinstance(args[0], str) and typ is GLubyte:
+        return (typ * len(args))(*[ord(c) for c in args])
     else:
-        return (GLfloat * len(args[0]))(*args[0])
+        return (typ * len(args))(*args)
 
 
 class Window(pyglet.window.Window):
@@ -57,24 +73,17 @@ class Window(pyglet.window.Window):
     dlists = {}
     
     # Light and material Data
-    fLightPos = M3DVector4f(-100.0, 100.0, 50.0, 1.0)    # Point source
-    fNoLight = M3DVector4f(0.0, 0.0, 0.0, 0.0)
-    fLowLight = M3DVector4f(0.25, 0.25, 0.25, 1.0)
-    fBrightLight = M3DVector4f(1.0, 1.0, 1.0, 1.0)
+    fLightPos = gl_vec(GLfloat, -100.0, 100.0, 50.0, 1.0)    # Point source
+    fNoLight = gl_vec(GLfloat, 0.0, 0.0, 0.0, 0.0)
+    fLowLight = gl_vec(GLfloat, 0.25, 0.25, 0.25, 1.0)
+    fBrightLight = gl_vec(GLfloat, 1.0, 1.0, 1.0, 1.0)
     
     # Shadow
-    mShadowMatrix = M3DMatrix44f()
+    mShadowMatrix = [0.0] * 16
 
     def __init__(self, w, h, title='Pyglet App'):
         super(Window, self).__init__(w, h, title)
 
-        # Calculate shadow matrix
-        vPoints = [
-            M3DVector3f(0.0, -0.4, 0.0),
-            M3DVector3f(10.0, -0.4, 0.0),
-            M3DVector3f(5.0, -0.4, -5.0),
-        ]
-        
         # Grayish background
         glClearColor(*self.fLowLight)
              
@@ -85,19 +94,27 @@ class Window(pyglet.window.Window):
         glEnable(GL_DEPTH_TEST)
         
         # Setup light parameters
-        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, vecf(self.fNoLight))
-        glLightfv(GL_LIGHT0, GL_AMBIENT, vecf(self.fLowLight))
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, vecf(self.fBrightLight))
-        glLightfv(GL_LIGHT0, GL_SPECULAR, vecf(self.fBrightLight))
+        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, self.fNoLight)
+        glLightfv(GL_LIGHT0, GL_AMBIENT, self.fLowLight)
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, self.fBrightLight)
+        glLightfv(GL_LIGHT0, GL_SPECULAR, self.fBrightLight)
         glEnable(GL_LIGHTING)
         glEnable(GL_LIGHT0)
 
+        # Calculate shadow matrix
+        vPoints = [
+            (0.0, -0.4, 0.0),
+            (10.0, -0.4, 0.0),
+            (5.0, -0.4, -5.0),
+        ]
+        
         # Get the plane equation from three points on the ground
         vPlaneEquation = M3DVector4f()
         m3dGetPlaneEquation(vPlaneEquation, vPoints[0], vPoints[1], vPoints[2])
 
         # Calculate projection matrix to draw shadow on the ground
         m3dMakePlanarShadowMatrix(self.mShadowMatrix, vPlaneEquation, self.fLightPos)
+        self.mShadowMatrix = gl_vec(GLfloat, self.mShadowMatrix[:])
 
         # Mostly use material tracking
         glEnable(GL_COLOR_MATERIAL);
@@ -151,7 +168,7 @@ class Window(pyglet.window.Window):
         self.frameCamera.ApplyCameraTransform()
         
         # Position light before any other transformations
-        glLightfv(GL_LIGHT0, GL_POSITION, vecf(self.fLightPos))
+        glLightfv(GL_LIGHT0, GL_POSITION, self.fLightPos)
         
         # Draw the ground
         glColor3f(0.60, .40, .10)
@@ -162,7 +179,7 @@ class Window(pyglet.window.Window):
         glDisable(GL_DEPTH_TEST)
         glDisable(GL_LIGHTING)
         glPushMatrix()
-        glMultMatrixf(list(self.mShadowMatrix))
+        glMultMatrixf(self.mShadowMatrix)
         self._draw_inhabitants(1)
         glPopMatrix()
         glEnable(GL_LIGHTING)
@@ -205,12 +222,12 @@ class Window(pyglet.window.Window):
         if nShadow == 0:
             # Torus alone will be specular
             glColor3f(1.0, 0.0, 0.0)
-            glMaterialfv(GL_FRONT, GL_SPECULAR, vecf(self.fBrightLight))
+            glMaterialfv(GL_FRONT, GL_SPECULAR, self.fBrightLight)
         
         glRotatef(self.yRot, 0.0, 1.0, 0.0)
 #        gltDrawTorus(0.35, 0.15, 61, 37)
         glCallList(self.dlists['torus'])
-        glMaterialfv(GL_FRONT, GL_SPECULAR, vecf(self.fNoLight))
+        glMaterialfv(GL_FRONT, GL_SPECULAR, self.fNoLight)
         glPopMatrix()
 
     def _update(self, dt):

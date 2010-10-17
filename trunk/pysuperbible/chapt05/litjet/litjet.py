@@ -22,15 +22,31 @@ from math3d import *
 from glframe import GLFrame
 
 
-def vecf(*args):
-    """return ctypes array of GLfloat for Pyglet's OpenGL interface.
-    args -> Either vararg floats, or args[0] as an interable float container
-    If using module OpenGL.GL directly you don't need this conversion.
+def gl_vec(typ, *args):
+    """return ctypes array of GLwhatever for Pyglet's OpenGL interface. (This
+    seems to work for all types, but it does almost no type conversion. Just
+    think in terms of "C without type casting".)
+    typ -> ctype or GL name for ctype; see pyglet.gl.GLenum through GLvoid
+    args -> Either vararg, or args[0] as an iterable container
+    Examples:
+        # Float
+        ar = gl_vec(GLfloat, 0.0, 1.0, 0.0)
+        ar = gl_vec(GLfloat, [0.0, 1.0, 0.0])
+        # Unsigned byte
+        ar = gl_vec(GLubyte, 'a','b','c')
+        ar = gl_vec(GLubyte, 'abc')
+        ar = gl_vec(GLubyte, ['a','b','c'])
+        ar = gl_vec(GLubyte, 97, 98, 99)
     """
-    if len(args) > 1:
-        return (GLfloat * len(args))(*args)
+    if len(args) == 1:
+        if isinstance(args[0],(tuple,list)):
+            args = args[0]
+        elif isinstance(args[0],str) and len(args[0]) > 1:
+            args = args[0]
+    if isinstance(args[0], str) and typ is GLubyte:
+        return (typ * len(args))(*[ord(c) for c in args])
     else:
-        return (GLfloat * len(args[0]))(*args[0])
+        return (typ * len(args))(*args)
 
 
 class Window(pyglet.window.Window):
@@ -42,8 +58,8 @@ class Window(pyglet.window.Window):
         super(Window, self).__init__(w, h, title)
 
         # Light values and coordinates
-        ambientLight = (0.3, 0.3, 0.3, 1.0)
-        diffuseLight = (0.7, 0.7, 0.7, 1.0)
+        ambientLight = gl_vec(GLfloat, 0.3, 0.3, 0.3, 1.0)
+        diffuseLight = gl_vec(GLfloat, 0.7, 0.7, 0.7, 1.0)
 
         glEnable(GL_DEPTH_TEST) # Hidden surface removal
         glFrontFace(GL_CCW)     # Counter clock-wise polygons face out
@@ -286,7 +302,7 @@ class Window(pyglet.window.Window):
         pass
 
     def on_resize(self, w, h):
-        lightPos = M3DVector4f(-50.0, 50.0, 100.0, 1.0)
+        lightPos = gl_vec(GLfloat, -50.0, 50.0, 100.0, 1.0)
 
         # Prevent a divide by zero
         if h == 0:
@@ -305,7 +321,7 @@ class Window(pyglet.window.Window):
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         
-        glLightfv(GL_LIGHT0, GL_POSITION, vecf(lightPos))
+        glLightfv(GL_LIGHT0, GL_POSITION, lightPos)
         glTranslatef(0.0, 0.0, -150.0)
     
     def on_key_press(self, sym, mods):

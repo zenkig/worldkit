@@ -22,15 +22,31 @@ from gltools import *
 from math3d import *
 
 
-def vecf(*args):
-    """return ctypes array of GLfloat for Pyglet's OpenGL interface.
-    args -> Either vararg floats, or args[0] as an interable float container
-    If using module OpenGL.GL directly you don't need this conversion.
+def gl_vec(typ, *args):
+    """return ctypes array of GLwhatever for Pyglet's OpenGL interface. (This
+    seems to work for all types, but it does almost no type conversion. Just
+    think in terms of "C without type casting".)
+    typ -> ctype or GL name for ctype; see pyglet.gl.GLenum through GLvoid
+    args -> Either vararg, or args[0] as an iterable container
+    Examples:
+        # Float
+        ar = gl_vec(GLfloat, 0.0, 1.0, 0.0)
+        ar = gl_vec(GLfloat, [0.0, 1.0, 0.0])
+        # Unsigned byte
+        ar = gl_vec(GLubyte, 'a','b','c')
+        ar = gl_vec(GLubyte, 'abc')
+        ar = gl_vec(GLubyte, ['a','b','c'])
+        ar = gl_vec(GLubyte, 97, 98, 99)
     """
-    if len(args) > 1:
-        return (GLfloat * len(args))(*args)
+    if len(args) == 1:
+        if isinstance(args[0],(tuple,list)):
+            args = args[0]
+        elif isinstance(args[0],str) and len(args[0]) > 1:
+            args = args[0]
+    if isinstance(args[0], str) and typ is GLubyte:
+        return (typ * len(args))(*[ord(c) for c in args])
     else:
-        return (GLfloat * len(args[0]))(*args[0])
+        return (typ * len(args))(*args)
 
 
 class Window(pyglet.window.Window):
@@ -117,18 +133,18 @@ def DrawTorus(mTransform):
             z = minorRadius * sin(b)
 
             # First point
-            objectVertex[0] = x0*r
-            objectVertex[1] = y0*r
-            objectVertex[2] = z
+            objectVertex.x = x0*r
+            objectVertex.y = y0*r
+            objectVertex.z = z
             m3dTransformVector3(transformedVertex, objectVertex, mTransform)
-            glVertex3fv(vecf(transformedVertex))
+            glVertex3fv(gl_vec(GLfloat, transformedVertex[:]))
 
             # Second point
-            objectVertex[0] = x1*r
-            objectVertex[1] = y1*r
-            objectVertex[2] = z
+            objectVertex.x = x1*r
+            objectVertex.y = y1*r
+            objectVertex.z = z
             m3dTransformVector3(transformedVertex, objectVertex, mTransform)
-            glVertex3fv(vecf(transformedVertex))
+            glVertex3fv(gl_vec(GLfloat, transformedVertex[:]))
         glEnd()
 
 

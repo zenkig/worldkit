@@ -22,17 +22,6 @@ from math3d import *
 from glframe import GLFrame
 
 
-def vecf(*args):
-    """return ctypes array of GLfloat for Pyglet's OpenGL interface.
-    args -> Either vararg floats, or args[0] as an interable float container
-    If using module OpenGL.GL directly you don't need this conversion.
-    """
-    if len(args) > 1:
-        return (GLfloat * len(args))(*args)
-    else:
-        return (GLfloat * len(args[0]))(*args[0])
-
-
 # Bitmap of camp fire
 fire = [
     0x00, 0x00, 0x00, 0x00,
@@ -75,8 +64,6 @@ class Window(pyglet.window.Window):
     def __init__(self, w, h, title='Pyglet App'):
         super(Window, self).__init__(w, h, title)
 
-        pyglet.clock.schedule_interval(self._update, 1.0/60.0)
-
     def on_draw(self):
         self.clear()
 
@@ -90,9 +77,6 @@ class Window(pyglet.window.Window):
             for x in range(16):
                 # Draw the "fire" bitmap, advance raster position
                 glBitmap(32, 32, 0.0, 0.0, 32.0, 0.0, fire)
-
-    def _update(self, dt):
-        pass
 
     def on_resize(self, w, h):
         # Prevent a divide by zero, when window is too short
@@ -112,13 +96,6 @@ class Window(pyglet.window.Window):
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
     
-    def on_key_press(self, sym, mods):
-        super(Window, self).on_key_press(sym, mods)
-    
-    def on_close(self):
-        pyglet.clock.unschedule(self._update)
-        super(Window, self).on_close()
-
 
 if __name__ == '__main__':
     window = Window(512, 512, 'OpenGL Bitmaps')

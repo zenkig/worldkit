@@ -26,17 +26,6 @@ from math3d import *
 from glframe import GLFrame
 
 
-def vecf(*args):
-    """return ctypes array of GLfloat for Pyglet's OpenGL interface.
-    args -> Either vararg floats, or args[0] as an interable float container
-    If using module OpenGL.GL directly you don't need this conversion.
-    """
-    if len(args) > 1:
-        return (GLfloat * len(args))(*args)
-    else:
-        return (GLfloat * len(args[0]))(*args[0])
-
-
 class Window(pyglet.window.Window):
 
     # GL frame objects
@@ -71,8 +60,6 @@ class Window(pyglet.window.Window):
             self.spheres[iSphere] = s
 
         pyglet.clock.schedule_interval(self._update, 1.0/60.0)
-#        pyglet.clock.unschedule(self.on_draw)
-#        pyglet.clock.schedule(self.on_draw)
         pyglet.clock.schedule_interval(self.fps, 2.0)
         
         self._make_display_lists()

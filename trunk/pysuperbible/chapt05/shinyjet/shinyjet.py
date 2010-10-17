@@ -22,15 +22,31 @@ from math3d import *
 from glframe import GLFrame
 
 
-def vecf(*args):
-    """return ctypes array of GLfloat for Pyglet's OpenGL interface.
-    args -> Either vararg floats, or args[0] as an interable float container
-    If using module OpenGL.GL directly you don't need this conversion.
+def gl_vec(typ, *args):
+    """return ctypes array of GLwhatever for Pyglet's OpenGL interface. (This
+    seems to work for all types, but it does almost no type conversion. Just
+    think in terms of "C without type casting".)
+    typ -> ctype or GL name for ctype; see pyglet.gl.GLenum through GLvoid
+    args -> Either vararg, or args[0] as an iterable container
+    Examples:
+        # Float
+        ar = gl_vec(GLfloat, 0.0, 1.0, 0.0)
+        ar = gl_vec(GLfloat, [0.0, 1.0, 0.0])
+        # Unsigned byte
+        ar = gl_vec(GLubyte, 'a','b','c')
+        ar = gl_vec(GLubyte, 'abc')
+        ar = gl_vec(GLubyte, ['a','b','c'])
+        ar = gl_vec(GLubyte, 97, 98, 99)
     """
-    if len(args) > 1:
-        return (GLfloat * len(args))(*args)
+    if len(args) == 1:
+        if isinstance(args[0],(tuple,list)):
+            args = args[0]
+        elif isinstance(args[0],str) and len(args[0]) > 1:
+            args = args[0]
+    if isinstance(args[0], str) and typ is GLubyte:
+        return (typ * len(args))(*[ord(c) for c in args])
     else:
-        return (GLfloat * len(args[0]))(*args[0])
+        return (typ * len(args))(*args)
 
 
 class Window(pyglet.window.Window):
@@ -42,10 +58,10 @@ class Window(pyglet.window.Window):
         super(Window, self).__init__(w, h, title)
 
         # Light values and coordinates
-        ambientLight = [0.3, 0.3, 0.3, 1.0]
-        diffuseLight = [0.7, 0.7, 0.7, 1.0]
-        specular = [1.0, 1.0, 1.0, 1.0]
-        specref = [1.0, 1.0, 1.0, 1.0]
+        ambientLight = gl_vec(GLfloat, 0.3, 0.3, 0.3, 1.0)
+        diffuseLight = gl_vec(GLfloat, 0.7, 0.7, 0.7, 1.0)
+        specular = gl_vec(GLfloat, 1.0, 1.0, 1.0, 1.0)
+        specref = gl_vec(GLfloat, 1.0, 1.0, 1.0, 1.0)
 
         glEnable(GL_DEPTH_TEST) # Hidden surface removal
         glFrontFace(GL_CCW)     # Counter clock-wise polygons face out
@@ -81,7 +97,7 @@ class Window(pyglet.window.Window):
     def on_draw(self):
         self.clear()
 
-        vNormal = M3DVector3f()    # Storeage for calculated surface normal
+        vNormal = [0.0] * 3    # Storeage for calculated surface normal
 
         # Save the matrix state and do the rotations
         glPushMatrix()
@@ -108,44 +124,44 @@ class Window(pyglet.window.Window):
 
         # Calculate the normal for the plane
         m3dFindNormal(vNormal, vPoints[0], vPoints[1], vPoints[2])
-        glNormal3fv(list(vNormal))
+        glNormal3fv(gl_vec(GLfloat, vNormal))
         glVertex3f(*vPoints[0])
         glVertex3f(*vPoints[1])
         glVertex3f(*vPoints[2])
 
         vPoints = [
-            M3DVector3f(0.0, 0.0, 60.0),
-            M3DVector3f(0.0, 15.0, 30.0),
-            M3DVector3f(-15.0, 0.0, 30.0),
+            [0.0, 0.0, 60.0],
+            [0.0, 15.0, 30.0],
+            [-15.0, 0.0, 30.0],
         ]
 
         m3dFindNormal(vNormal, vPoints[0], vPoints[1], vPoints[2])
-        glNormal3fv(list(vNormal))
+        glNormal3fv(gl_vec(GLfloat, vNormal))
         glVertex3f(*vPoints[0])
         glVertex3f(*vPoints[1])
         glVertex3f(*vPoints[2])
 
         # Body of the Plane ############
         vPoints = [
-            M3DVector3f(-15.0, 0.0, 30.0),
-            M3DVector3f(0.0, 15.0, 30.0),
-            M3DVector3f(0.0, 0.0, -56.0),
+            [-15.0, 0.0, 30.0],
+            [0.0, 15.0, 30.0],
+            [0.0, 0.0, -56.0],
         ]
 
         m3dFindNormal(vNormal, vPoints[0], vPoints[1], vPoints[2])
-        glNormal3fv(list(vNormal))
+        glNormal3fv(gl_vec(GLfloat, vNormal))
         glVertex3f(*vPoints[0])
         glVertex3f(*vPoints[1])
         glVertex3f(*vPoints[2])
                     
         vPoints = [
-            M3DVector3f(0.0, 0.0, -56.0),
-            M3DVector3f(0.0, 15.0, 30.0),
-            M3DVector3f(15.0, 0.0, 30.0),
+            [0.0, 0.0, -56.0],
+            [0.0, 15.0, 30.0],
+            [15.0, 0.0, 30.0],
         ]
     
         m3dFindNormal(vNormal, vPoints[0], vPoints[1], vPoints[2])
-        glNormal3fv(list(vNormal))
+        glNormal3fv(gl_vec(GLfloat, vNormal))
         glVertex3f(*vPoints[0])
         glVertex3f(*vPoints[1])
         glVertex3f(*vPoints[2])
@@ -159,49 +175,49 @@ class Window(pyglet.window.Window):
         # Left wing
         # Large triangle for bottom of wing
         vPoints = [
-            M3DVector3f(0.0, 2.0, 27.0),
-            M3DVector3f(-60.0, 2.0, -8.0),
-            M3DVector3f(60.0, 2.0, -8.0),
+            [0.0, 2.0, 27.0],
+            [-60.0, 2.0, -8.0],
+            [60.0, 2.0, -8.0],
         ]
 
         m3dFindNormal(vNormal, vPoints[0], vPoints[1], vPoints[2])
-        glNormal3fv(list(vNormal))
+        glNormal3fv(gl_vec(GLfloat, vNormal))
         glVertex3f(*vPoints[0])
         glVertex3f(*vPoints[1])
         glVertex3f(*vPoints[2])
 
         vPoints = [
-            M3DVector3f(60.0, 2.0, -8.0),
-            M3DVector3f(0.0, 7.0, -8.0),
-            M3DVector3f(0.0,2.0,27.0),
+            [60.0, 2.0, -8.0],
+            [0.0, 7.0, -8.0],
+            [0.0,2.0,27.0],
         ]
                 
         m3dFindNormal(vNormal, vPoints[0], vPoints[1], vPoints[2])
-        glNormal3fv(list(vNormal))
+        glNormal3fv(gl_vec(GLfloat, vNormal))
         glVertex3f(*vPoints[0])
         glVertex3f(*vPoints[1])
         glVertex3f(*vPoints[2])
 
         vPoints = [
-            M3DVector3f(60.0, 2.0, -8.0),
-            M3DVector3f(-60.0, 2.0, -8.0),
-            M3DVector3f(0.0,7.0,-8.0),
+            [60.0, 2.0, -8.0],
+            [-60.0, 2.0, -8.0],
+            [0.0,7.0,-8.0],
         ]
 
         m3dFindNormal(vNormal, vPoints[0], vPoints[1], vPoints[2])
-        glNormal3fv(list(vNormal))
+        glNormal3fv(gl_vec(GLfloat, vNormal))
         glVertex3f(*vPoints[0])
         glVertex3f(*vPoints[1])
         glVertex3f(*vPoints[2])
 
         vPoints = [
-            M3DVector3f(0.0,2.0,27.0),
-            M3DVector3f(0.0, 7.0, -8.0),
-            M3DVector3f(-60.0, 2.0, -8.0),
+            [0.0,2.0,27.0],
+            [0.0, 7.0, -8.0],
+            [-60.0, 2.0, -8.0],
         ]
 
         m3dFindNormal(vNormal, vPoints[0], vPoints[1], vPoints[2])
-        glNormal3fv(list(vNormal))
+        glNormal3fv(gl_vec(GLfloat, vNormal))
         glVertex3f(*vPoints[0])
         glVertex3f(*vPoints[1])
         glVertex3f(*vPoints[2])
@@ -214,73 +230,73 @@ class Window(pyglet.window.Window):
         glVertex3f(0.0,-0.50,-40.0)
 
         vPoints = [
-            M3DVector3f(0.0,-0.5,-40.0),
-            M3DVector3f(30.0, -0.5, -57.0),
-            M3DVector3f(0.0, 4.0, -57.0),
+            [0.0,-0.5,-40.0],
+            [30.0, -0.5, -57.0],
+            [0.0, 4.0, -57.0],
         ]
 
         m3dFindNormal(vNormal, vPoints[0], vPoints[1], vPoints[2])
-        glNormal3fv(list(vNormal))
+        glNormal3fv(gl_vec(GLfloat, vNormal))
         glVertex3f(*vPoints[0])
         glVertex3f(*vPoints[1])
         glVertex3f(*vPoints[2])
 
         vPoints = [
-            M3DVector3f(0.0, 4.0, -57.0),
-            M3DVector3f(-30.0, -0.5, -57.0),
-            M3DVector3f(0.0,-0.5,-40.0),
+            [0.0, 4.0, -57.0],
+            [-30.0, -0.5, -57.0],
+            [0.0,-0.5,-40.0],
         ]
 
         m3dFindNormal(vNormal, vPoints[0], vPoints[1], vPoints[2])
-        glNormal3fv(list(vNormal))
+        glNormal3fv(gl_vec(GLfloat, vNormal))
         glVertex3f(*vPoints[0])
         glVertex3f(*vPoints[1])
         glVertex3f(*vPoints[2])
 
         vPoints = [
-            M3DVector3f(30.0,-0.5,-57.0),
-            M3DVector3f(-30.0, -0.5, -57.0),
-            M3DVector3f(0.0, 4.0, -57.0),
+            [30.0,-0.5,-57.0],
+            [-30.0, -0.5, -57.0],
+            [0.0, 4.0, -57.0],
         ]
 
         m3dFindNormal(vNormal, vPoints[0], vPoints[1], vPoints[2])
-        glNormal3fv(list(vNormal))
+        glNormal3fv(gl_vec(GLfloat, vNormal))
         glVertex3f(*vPoints[0])
         glVertex3f(*vPoints[1])
         glVertex3f(*vPoints[2])
 
         vPoints = [
-            M3DVector3f(0.0,0.5,-40.0),
-            M3DVector3f(3.0, 0.5, -57.0),
-            M3DVector3f(0.0, 25.0, -65.0),
+            [0.0,0.5,-40.0],
+            [3.0, 0.5, -57.0],
+            [0.0, 25.0, -65.0],
         ]
 
         m3dFindNormal(vNormal, vPoints[0], vPoints[1], vPoints[2])
-        glNormal3fv(list(vNormal))
+        glNormal3fv(gl_vec(GLfloat, vNormal))
         glVertex3f(*vPoints[0])
         glVertex3f(*vPoints[1])
         glVertex3f(*vPoints[2])
 
         vPoints = [
-            M3DVector3f(0.0, 25.0, -65.0),
-            M3DVector3f(-3.0, 0.5, -57.0),
-            M3DVector3f(0.0,0.5,-40.0),
+            [0.0, 25.0, -65.0],
+            [-3.0, 0.5, -57.0],
+            [0.0,0.5,-40.0],
         ]
 
         m3dFindNormal(vNormal, vPoints[0], vPoints[1], vPoints[2])
-        glNormal3fv(list(vNormal))
+        glNormal3fv(gl_vec(GLfloat, vNormal))
         glVertex3f(*vPoints[0])
         glVertex3f(*vPoints[1])
         glVertex3f(*vPoints[2])
 
         vPoints = [
-            M3DVector3f(3.0, 0.5, -57.0),
-            M3DVector3f(-3.0, 0.5, -57.0),
-            M3DVector3f(0.0, 25.0, -65.0),
+            [3.0, 0.5, -57.0],
+            [-3.0, 0.5, -57.0],
+            [0.0, 25.0, -65.0],
         ]
 
         m3dFindNormal(vNormal, vPoints[0], vPoints[1], vPoints[2])
-        glNormal3fv(list(vNormal))
+        glNormal3fv(gl_vec(GLfloat, vNormal))
         glVertex3f(*vPoints[0])
         glVertex3f(*vPoints[1])
         glVertex3f(*vPoints[2])

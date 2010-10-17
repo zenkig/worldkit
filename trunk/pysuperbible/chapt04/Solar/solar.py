@@ -22,23 +22,39 @@ from gltools import *
 from math3d import *
 
 
-def vecf(*args):
-    """return ctypes array of GLfloat for Pyglet's OpenGL interface.
-    args -> Either vararg floats, or args[0] as an interable float container
-    If using module OpenGL.GL directly you don't need this conversion.
+def gl_vec(typ, *args):
+    """return ctypes array of GLwhatever for Pyglet's OpenGL interface. (This
+    seems to work for all types, but it does almost no type conversion. Just
+    think in terms of "C without type casting".)
+    typ -> ctype or GL name for ctype; see pyglet.gl.GLenum through GLvoid
+    args -> Either vararg, or args[0] as an iterable container
+    Examples:
+        # Float
+        ar = gl_vec(GLfloat, 0.0, 1.0, 0.0)
+        ar = gl_vec(GLfloat, [0.0, 1.0, 0.0])
+        # Unsigned byte
+        ar = gl_vec(GLubyte, 'a','b','c')
+        ar = gl_vec(GLubyte, 'abc')
+        ar = gl_vec(GLubyte, ['a','b','c'])
+        ar = gl_vec(GLubyte, 97, 98, 99)
     """
-    if len(args) > 1:
-        return (GLfloat * len(args))(*args)
+    if len(args) == 1:
+        if isinstance(args[0],(tuple,list)):
+            args = args[0]
+        elif isinstance(args[0],str) and len(args[0]) > 1:
+            args = args[0]
+    if isinstance(args[0], str) and typ is GLubyte:
+        return (typ * len(args))(*[ord(c) for c in args])
     else:
-        return (GLfloat * len(args[0]))(*args[0])
+        return (typ * len(args))(*args)
 
 
 class Window(pyglet.window.Window):
 
     # Lighting values
-    whiteLight = M3DVector4f(0.2, 0.2, 0.2, 1.0)
-    sourceLight = M3DVector4f(0.8, 0.8, 0.8, 1.0)
-    lightPos = M3DVector4f(0.0, 0.0, 0.0, 1.0)
+    whiteLight = gl_vec(GLfloat, 0.2, 0.2, 0.2, 1.0)
+    sourceLight = gl_vec(GLfloat, 0.8, 0.8, 0.8, 1.0)
+    lightPos = gl_vec(GLfloat, 0.0, 0.0, 0.0, 1.0)
 
     fEarthRot = 0.0
     fMoonRot = 0.0
@@ -55,9 +71,9 @@ class Window(pyglet.window.Window):
         glEnable(GL_LIGHTING)
 
         # Setup and enable light 0
-        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, vecf(self.whiteLight))
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, vecf(self.sourceLight))
-        glLightfv(GL_LIGHT0, GL_POSITION, vecf(self.lightPos))
+        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, self.whiteLight)
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, self.sourceLight)
+        glLightfv(GL_LIGHT0, GL_POSITION, self.lightPos)
         glEnable(GL_LIGHT0)
 
         # Enable color tracking
@@ -96,7 +112,7 @@ class Window(pyglet.window.Window):
         glEnable(GL_LIGHTING)
 
         # Move the light after we draw the sun!
-        glLightfv(GL_LIGHT0, GL_POSITION, vecf(self.lightPos))
+        glLightfv(GL_LIGHT0, GL_POSITION, self.lightPos)
 
         # Rotate coordinate system
         glRotatef(self.fEarthRot, 0.0, 1.0, 0.0)
