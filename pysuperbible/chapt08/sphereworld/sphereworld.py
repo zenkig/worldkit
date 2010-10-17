@@ -55,7 +55,7 @@ def gl_vec(typ, *args):
 
 class Window(pyglet.window.Window):
 
-    NUM_SPHERES = 60
+    NUM_SPHERES = 30
     spheres = [None] * NUM_SPHERES
     frameCamera = GLFrame()
 
