@@ -47,10 +47,23 @@ def gl_vec(typ, *args):
 
 class Window(pyglet.window.Window):
 
+    # GL display lists stored by name
+    dlists = {}
+
     def __init__(self, w, h, title='Pyglet App'):
         super(Window, self).__init__(w, h, title)
 
         pyglet.clock.schedule_interval(self._update, 1.0/60.0)
+
+    def _make_display_list(self, name, func):
+        dlists = self.dlists
+        dlists[name] = glGenLists(1)
+        glNewList(dlists[name], GL_COMPILE)
+        func()
+        glEndList()
+    
+    def _call_display_list(self, name):
+        glCallList(self.dlists[name])
 
     def on_draw(self):
         self.clear()
