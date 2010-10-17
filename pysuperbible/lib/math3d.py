@@ -639,7 +639,6 @@ def m3dFindNormal(result, point1, point2, point3):
     # the normal vector.
     m3dCrossProduct(result, v1, v2)
 
-
 if __name__ == '__main__':
     def _assert_float(v):
         assert all(isinstance(n, float) for n in v)
