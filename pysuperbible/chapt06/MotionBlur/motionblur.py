@@ -22,15 +22,31 @@ from math3d import *
 from glframe import GLFrame
 
 
-def vecf(*args):
-    """return ctypes array of GLfloat for Pyglet's OpenGL interface.
-    args -> Either vararg floats, or args[0] as an interable float container
-    If using module OpenGL.GL directly you don't need this conversion.
+def gl_vec(typ, *args):
+    """return ctypes array of GLwhatever for Pyglet's OpenGL interface. (This
+    seems to work for all types, but it does almost no type conversion. Just
+    think in terms of "C without type casting".)
+    typ -> ctype or GL name for ctype; see pyglet.gl.GLenum through GLvoid
+    args -> Either vararg, or args[0] as an iterable container
+    Examples:
+        # Float
+        ar = gl_vec(GLfloat, 0.0, 1.0, 0.0)
+        ar = gl_vec(GLfloat, [0.0, 1.0, 0.0])
+        # Unsigned byte
+        ar = gl_vec(GLubyte, 'a','b','c')
+        ar = gl_vec(GLubyte, 'abc')
+        ar = gl_vec(GLubyte, ['a','b','c'])
+        ar = gl_vec(GLubyte, 97, 98, 99)
     """
-    if len(args) > 1:
-        return (GLfloat * len(args))(*args)
+    if len(args) == 1:
+        if isinstance(args[0],(tuple,list)):
+            args = args[0]
+        elif isinstance(args[0],str) and len(args[0]) > 1:
+            args = args[0]
+    if isinstance(args[0], str) and typ is GLubyte:
+        return (typ * len(args))(*[ord(c) for c in args])
     else:
-        return (GLfloat * len(args[0]))(*args[0])
+        return (typ * len(args))(*args)
 
 
 class Window(pyglet.window.Window):
@@ -38,11 +54,11 @@ class Window(pyglet.window.Window):
     yRot = 45.0
     
     # Light and material Data
-    fLightPos = [-100.0, 100.0, 50.0, 1.0]   # Point source
-    fLightPosMirror = [-100.0, -100.0, 50.0, 1.0]
-    fNoLight = [0.0, 0.0, 0.0, 0.0]
-    fLowLight = [0.25, 0.25, 0.25, 1.0]
-    fBrightLight = [1.0, 1.0, 1.0, 1.0]
+    fLightPos = gl_vec(GLfloat, -100.0, 100.0, 50.0, 1.0)   # Point source
+    fLightPosMirror = gl_vec(GLfloat, -100.0, -100.0, 50.0, 1.0)
+    fNoLight = gl_vec(GLfloat, 0.0, 0.0, 0.0, 0.0)
+    fLowLight = gl_vec(GLfloat, 0.25, 0.25, 0.25, 1.0)
+    fBrightLight = gl_vec(GLfloat, 1.0, 1.0, 1.0, 1.0)
 
     def __init__(self, w, h, title='Pyglet App'):
         super(Window, self).__init__(w, h, title)
@@ -74,13 +90,15 @@ class Window(pyglet.window.Window):
         pyglet.clock.schedule_interval(self._update, 1.0/60.0)
 
     def on_draw(self):
-        fPasses = 10.0
+        self.clear()
+        
+        fPasses = 10
         
         # Set the current rotation back a few degrees
         self.yRot = 35.0
                 
         for fPass in range(fPasses):
-            self.yRot += .75    #1.0f / (fPass+1.0f)
+            self.yRot += 1.0 / (fPass+1.0)
            
             # Draw sphere
             self._draw_geometry()

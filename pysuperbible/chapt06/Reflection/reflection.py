@@ -23,25 +23,41 @@ from math3d import *
 from glframe import GLFrame
 
 
-def vecf(*args):
-    """return ctypes array of GLfloat for Pyglet's OpenGL interface.
-    args -> Either vararg floats, or args[0] as an interable float container
-    If using module OpenGL.GL directly you don't need this conversion.
+def gl_vec(typ, *args):
+    """return ctypes array of GLwhatever for Pyglet's OpenGL interface. (This
+    seems to work for all types, but it does almost no type conversion. Just
+    think in terms of "C without type casting".)
+    typ -> ctype or GL name for ctype; see pyglet.gl.GLenum through GLvoid
+    args -> Either vararg, or args[0] as an iterable container
+    Examples:
+        # Float
+        ar = gl_vec(GLfloat, 0.0, 1.0, 0.0)
+        ar = gl_vec(GLfloat, [0.0, 1.0, 0.0])
+        # Unsigned byte
+        ar = gl_vec(GLubyte, 'a','b','c')
+        ar = gl_vec(GLubyte, 'abc')
+        ar = gl_vec(GLubyte, ['a','b','c'])
+        ar = gl_vec(GLubyte, 97, 98, 99)
     """
-    if len(args) > 1:
-        return (GLfloat * len(args))(*args)
+    if len(args) == 1:
+        if isinstance(args[0],(tuple,list)):
+            args = args[0]
+        elif isinstance(args[0],str) and len(args[0]) > 1:
+            args = args[0]
+    if isinstance(args[0], str) and typ is GLubyte:
+        return (typ * len(args))(*[ord(c) for c in args])
     else:
-        return (GLfloat * len(args[0]))(*args[0])
+        return (typ * len(args))(*args)
 
 
 class Window(pyglet.window.Window):
 
     # Light and material Data
-    fLightPos = [-100.0, 100.0, 50.0, 1.0]  # Point source
-    fLightPosMirror = [-100.0, -100.0, 50.0, 1.0]
-    fNoLight = [0.0, 0.0, 0.0, 0.0]
-    fLowLight = [0.25, 0.25, 0.25, 1.0]
-    fBrightLight = [1.0, 1.0, 1.0, 1.0]
+    fLightPos = gl_vec(GLfloat, -100.0, 100.0, 50.0, 1.0)  # Point source
+    fLightPosMirror = gl_vec(GLfloat, -100.0, -100.0, 50.0, 1.0)
+    fNoLight = gl_vec(GLfloat, 0.0, 0.0, 0.0, 0.0)
+    fLowLight = gl_vec(GLfloat, 0.25, 0.25, 0.25, 1.0)
+    fBrightLight = gl_vec(GLfloat, 1.0, 1.0, 1.0, 1.0)
 
     # GL display lists for shapes
     dlists = {}
@@ -73,26 +89,21 @@ class Window(pyglet.window.Window):
         glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)
         glMateriali(GL_FRONT, GL_SHININESS, 128)
         
-        self._make_display_lists()
+        self._make_display_list('sphere', self._draw_sphere)
+        self._make_display_list('torus', self._draw_torus)
+        self._make_display_list('ground', self._draw_ground)
 
         pyglet.clock.schedule_interval(self._update, 1.0/60.0)
 
-    def _make_display_lists(self):
+    def _make_display_list(self, name, func):
         dlists = self.dlists
-        dlists['sphere'] = glGenLists(1)
-        glNewList(dlists['sphere'], GL_COMPILE)
-        glutSolidSphere(0.1, 17, 9)
+        dlists[name] = glGenLists(1)
+        glNewList(dlists[name], GL_COMPILE)
+        func()
         glEndList()
-
-        dlists['torus'] = glGenLists(1)
-        glNewList(dlists['torus'], GL_COMPILE)
-        gltDrawTorus(0.35, 0.15, 61, 37)
-        glEndList()
-
-        dlists['ground'] = glGenLists(1)
-        glNewList(dlists['ground'], GL_COMPILE)
-        self._draw_ground()
-        glEndList()
+    
+    def _call_display_list(self, name):
+        glCallList(self.dlists[name])
 
     def on_draw(self):
         self.clear()
@@ -112,7 +123,7 @@ class Window(pyglet.window.Window):
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 #        self._draw_ground()
-        glCallList(self.dlists['ground'])
+        self._call_display_list('ground')
         glDisable(GL_BLEND)
         glEnable(GL_LIGHTING)
         
@@ -121,6 +132,12 @@ class Window(pyglet.window.Window):
         self._draw_world()
         glPopMatrix()
 
+    def _draw_sphere(self):
+        glutSolidSphere(0.1, 17, 9)
+
+    def _draw_torus(self):
+        gltDrawTorus(0.35, 0.15, 61, 37)
+    
     def _draw_ground(self):
         fExtent = 20.0
         fStep = 0.5
@@ -155,12 +172,12 @@ class Window(pyglet.window.Window):
         glRotatef(-self.yRot*2.0, 0.0, 1.0, 0.0)
         glTranslatef(1.0, 0.0, 0.0)
 #        glutSolidSphere(0.1, 17, 9)
-        glCallList(self.dlists['sphere'])
+        self._call_display_list('sphere')
         glPopMatrix()
 
         glRotatef(self.yRot, 0.0, 1.0, 0.0)
 #        gltDrawTorus(0.35, 0.15, 61, 37)
-        glCallList(self.dlists['torus'])
+        self._call_display_list('torus')
 
         glPopMatrix()
 

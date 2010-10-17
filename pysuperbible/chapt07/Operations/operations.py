@@ -6,7 +6,8 @@
 ## Pythonated for Pyglet by Gummbum
 ## Added display lists for glDrawPixels(), as it is a very expensive operation
 ## Gumm note: Yeah, there's a lotta freaky voodoo in here.
-## The inverted image doesn't save any pixels for some mysterious reason.
+## The inverted image doesn't save any pixels for some mysterious reason. All
+## the other modes can be saved.
 """
 
 

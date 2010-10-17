@@ -22,17 +22,6 @@ from gltools import *
 from math3d import *
 
 
-def vecf(*args):
-    """return ctypes array of GLfloat for Pyglet's OpenGL interface.
-    args -> Either vararg floats, or args[0] as an interable float container
-    If using module OpenGL.GL directly you don't need this conversion.
-    """
-    if len(args) > 1:
-        return (GLfloat * len(args))(*args)
-    else:
-        return (GLfloat * len(args[0]))(*args[0])
-
-
 class Window(pyglet.window.Window):
 
     xRot = 0.0

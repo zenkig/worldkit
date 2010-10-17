@@ -21,15 +21,31 @@ from gltools import *
 from math3d import *
 
 
-def vecf(*args):
-    """return ctypes array of GLfloat for Pyglet's OpenGL interface.
-    args -> Either vararg floats, or args[0] as an interable float container
-    If using module OpenGL.GL directly you don't need this conversion.
+def gl_vec(typ, *args):
+    """return ctypes array of GLwhatever for Pyglet's OpenGL interface. (This
+    seems to work for all types, but it does almost no type conversion. Just
+    think in terms of "C without type casting".)
+    typ -> ctype or GL name for ctype; see pyglet.gl.GLenum through GLvoid
+    args -> Either vararg, or args[0] as an iterable container
+    Examples:
+        # Float
+        ar = gl_vec(GLfloat, 0.0, 1.0, 0.0)
+        ar = gl_vec(GLfloat, [0.0, 1.0, 0.0])
+        # Unsigned byte
+        ar = gl_vec(GLubyte, 'a','b','c')
+        ar = gl_vec(GLubyte, 'abc')
+        ar = gl_vec(GLubyte, ['a','b','c'])
+        ar = gl_vec(GLubyte, 97, 98, 99)
     """
-    if len(args) > 1:
-        return (GLfloat * len(args))(*args)
+    if len(args) == 1:
+        if isinstance(args[0],(tuple,list)):
+            args = args[0]
+        elif isinstance(args[0],str) and len(args[0]) > 1:
+            args = args[0]
+    if isinstance(args[0], str) and typ is GLubyte:
+        return (typ * len(args))(*[ord(c) for c in args])
     else:
-        return (GLfloat * len(args[0]))(*args[0])
+        return (typ * len(args))(*args)
 
 
 class Window(pyglet.window.Window):
@@ -42,9 +58,9 @@ class Window(pyglet.window.Window):
         super(Window, self).__init__(w, h, title)
 
         # Light values and coordinates
-        whiteLight = M3DVector4f(0.45, 0.45, 0.45, 1.0)
-        sourceLight = M3DVector4f(0.25, 0.25, 0.25, 1.0)
-        lightPos = M3DVector4f(-50.0, 25.0, 250.0, 0.0)
+        whiteLight = gl_vec(GLfloat, 0.45, 0.45, 0.45, 1.0)
+        sourceLight = gl_vec(GLfloat, 0.25, 0.25, 0.25, 1.0)
+        lightPos = gl_vec(GLfloat, -50.0, 25.0, 250.0, 0.0)
 
         glEnable(GL_DEPTH_TEST)	# Hidden surface removal
         glFrontFace(GL_CCW)		# Counter clock-wise polygons face out
@@ -54,10 +70,10 @@ class Window(pyglet.window.Window):
         glEnable(GL_LIGHTING)
 
         # Setup and enable light 0
-        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, vecf(whiteLight))
-        glLightfv(GL_LIGHT0,GL_AMBIENT, vecf(sourceLight))
-        glLightfv(GL_LIGHT0,GL_DIFFUSE, vecf(sourceLight))
-        glLightfv(GL_LIGHT0,GL_POSITION, vecf(lightPos))
+        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, whiteLight)
+        glLightfv(GL_LIGHT0,GL_AMBIENT, sourceLight)
+        glLightfv(GL_LIGHT0,GL_DIFFUSE, sourceLight)
+        glLightfv(GL_LIGHT0,GL_POSITION, lightPos)
         glEnable(GL_LIGHT0)
 
         # Enable color tracking

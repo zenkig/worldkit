@@ -88,12 +88,6 @@ class Window(pyglet.window.Window):
 
     def __init__(self, w, h, title='Pyglet App'):
         super(Window, self).__init__(w, h, title)
-
-        vPoints = [
-            [0.0, -0.4, 0.0],
-            [10.0, -0.4, 0.0],
-            [5.0, -0.4, -5.0],
-        ]
     
         # Grayish background
         glClearColor(*self.fLowLight)
@@ -122,9 +116,15 @@ class Window(pyglet.window.Window):
         glEnable(GL_LIGHT0)
         
         # Calculate shadow matrix
+        vPoints = [
+            [0.0, -0.4, 0.0],
+            [10.0, -0.4, 0.0],
+            [5.0, -0.4, -5.0],
+        ]
         pPlane = M3DVector4f()
         m3dGetPlaneEquation(pPlane, vPoints[0], vPoints[1], vPoints[2])
         m3dMakePlanarShadowMatrix(self.mShadowMatrix, pPlane, self.fLightPos)
+        self.mShadowMatrix = gl_vec(GLfloat, self.mShadowMatrix)
     
         # Mostly use material tracking
         glEnable(GL_COLOR_MATERIAL)

@@ -20,32 +20,48 @@ sys.path.append('../../lib')
 from math3d import *
 
 
-def vecf(*args):
-    """return ctypes array of GLfloat for Pyglet's OpenGL interface.
-    args -> Either vararg floats, or args[0] as an interable float container
-    If using module OpenGL.GL directly you don't need this conversion.
+def gl_vec(typ, *args):
+    """return ctypes array of GLwhatever for Pyglet's OpenGL interface. (This
+    seems to work for all types, but it does almost no type conversion. Just
+    think in terms of "C without type casting".)
+    typ -> ctype or GL name for ctype; see pyglet.gl.GLenum through GLvoid
+    args -> Either vararg, or args[0] as an iterable container
+    Examples:
+        # Float
+        ar = gl_vec(GLfloat, 0.0, 1.0, 0.0)
+        ar = gl_vec(GLfloat, [0.0, 1.0, 0.0])
+        # Unsigned byte
+        ar = gl_vec(GLubyte, 'a','b','c')
+        ar = gl_vec(GLubyte, 'abc')
+        ar = gl_vec(GLubyte, ['a','b','c'])
+        ar = gl_vec(GLubyte, 97, 98, 99)
     """
-    if len(args) > 1:
-        return (GLfloat * len(args))(*args)
+    if len(args) == 1:
+        if isinstance(args[0],(tuple,list)):
+            args = args[0]
+        elif isinstance(args[0],str) and len(args[0]) > 1:
+            args = args[0]
+    if isinstance(args[0], str) and typ is GLubyte:
+        return (typ * len(args))(*[ord(c) for c in args])
     else:
-        return (GLfloat * len(args[0]))(*args[0])
+        return (typ * len(args))(*args)
 
 
 class Window(pyglet.window.Window):
 
     nStep = 0
-    lightAmbient = M3DVector4f(0.2, 0.2, 0.2, 1.0)
-    lightDiffuse = M3DVector4f(0.7, 0.7, 0.7, 1.0)
-    lightSpecular = M3DVector3f(0.9, 0.9, 0.9)
-    materialColor = M3DVector3f(0.8, 0.0, 0.0)
-    vLightPos = M3DVector4f(-80.0, 120.0, 100.0, 0.0)
+    lightAmbient = gl_vec(GLfloat, 0.2, 0.2, 0.2, 1.0)
+    lightDiffuse = gl_vec(GLfloat, 0.7, 0.7, 0.7, 1.0)
+    lightSpecular = gl_vec(GLfloat, 0.9, 0.9, 0.9)
+    materialColor = gl_vec(GLfloat, 0.8, 0.0, 0.0)
+    vLightPos = gl_vec(GLfloat, -80.0, 120.0, 100.0, 0.0)
     ground = [
         [0.0, -25.0, 0.0],
         [10.0, -25.0, 0.0],
         [10.0, -25.0, -10.0],
     ]
     textures = []
-    mCubeTransform = M3DMatrix44f()
+    mCubeTransform = [0.0] * 16
     pPlane = M3DVector4f()
 
     def __init__(self):
@@ -116,13 +132,13 @@ class Window(pyglet.window.Window):
         glDepthFunc(GL_LEQUAL)
         glEnable(GL_COLOR_MATERIAL)
 
-        glLightfv(GL_LIGHT0, GL_AMBIENT, vecf(self.lightAmbient))
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, vecf(self.lightDiffuse))
-        glLightfv(GL_LIGHT0, GL_SPECULAR, vecf(self.lightSpecular))
+        glLightfv(GL_LIGHT0, GL_AMBIENT, self.lightAmbient)
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, self.lightDiffuse)
+        glLightfv(GL_LIGHT0, GL_SPECULAR, self.lightSpecular)
         glEnable(GL_LIGHTING)
         glEnable(GL_LIGHT0)
-        glMaterialfv(GL_FRONT, GL_SPECULAR, vecf(self.lightSpecular))
-        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, vecf(self.materialColor))
+        glMaterialfv(GL_FRONT, GL_SPECULAR, self.lightSpecular)
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, self.materialColor)
         glMateriali(GL_FRONT, GL_SHININESS, 128)
 
     def _draw_tabletop_colored(self):
@@ -175,11 +191,11 @@ class Window(pyglet.window.Window):
         glEnd()
 
     def _draw_cube_colored_with_shadow(self):
-        mCubeTransform = self.mCubeTransform
+        mCubeTransform = gl_vec(GLfloat, self.mCubeTransform)
         pPlane = self.pPlane
         
         # Draw a shadow with some lighting
-        glGetFloatv(GL_MODELVIEW_MATRIX, vecf(mCubeTransform))
+        glGetFloatv(GL_MODELVIEW_MATRIX, mCubeTransform)
         glutSolidCube(50.0)
         glPopMatrix()
 
@@ -192,7 +208,7 @@ class Window(pyglet.window.Window):
         m3dGetPlaneEquation(pPlane, ground[0], ground[1], ground[2])
         m3dMakePlanarShadowMatrix(mCubeTransform, pPlane, self.vLightPos)
         #MakeShadowMatrix(ground, lightpos, cubeXform);
-        glMultMatrixf(vecf(mCubeTransform))
+        glMultMatrixf(mCubeTransform)
         
         glTranslatef(-10.0, 0.0, 10.0)
         
@@ -217,13 +233,13 @@ class Window(pyglet.window.Window):
         glEnd()
 
     def _draw_cube_textured(self):
-        mCubeTransform = self.mCubeTransform
+        mCubeTransform = gl_vec(GLfloat, self.mCubeTransform)
         pPlane = self.pPlane
         textures = self.textures
         ground = self.ground
         
         glColor3ub(255,255,255)
-        glGetFloatv(GL_MODELVIEW_MATRIX, vecf(mCubeTransform))
+        glGetFloatv(GL_MODELVIEW_MATRIX, mCubeTransform)
 
         # Front Face (before rotation)
         glBindTexture(GL_TEXTURE_2D, textures[1])
@@ -275,7 +291,7 @@ class Window(pyglet.window.Window):
 
         m3dGetPlaneEquation(pPlane, ground[0], ground[1], ground[2])
         m3dMakePlanarShadowMatrix(mCubeTransform, pPlane, self.vLightPos)
-        glMultMatrixf(vecf(mCubeTransform))
+        glMultMatrixf(mCubeTransform)
         
         glTranslatef(-10.0, 0.0, 10.0)
         
@@ -303,7 +319,7 @@ class Window(pyglet.window.Window):
         glOrtho(-100.0, windowWidth, -100.0, windowHeight, -200.0, 200.0)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-        glLightfv(GL_LIGHT0, GL_POSITION, vecf(self.vLightPos))
+        glLightfv(GL_LIGHT0, GL_POSITION, self.vLightPos)
         glRotatef(30.0, 1.0, 0.0, 0.0)
         glRotatef(330.0, 0.0, 1.0, 0.0)
 

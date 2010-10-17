@@ -21,17 +21,6 @@ from gltools import *
 from math3d import *
 
 
-def vecf(*args):
-    """return ctypes array of GLfloat for Pyglet's OpenGL interface.
-    args -> Either vararg floats, or args[0] as an interable float container
-    If using module OpenGL.GL directly you don't need this conversion.
-    """
-    if len(args) > 1:
-        return (GLfloat * len(args))(*args)
-    else:
-        return (GLfloat * len(args[0]))(*args[0])
-
-
 class Window(pyglet.window.Window):
 
     def __init__(self):
@@ -39,8 +28,6 @@ class Window(pyglet.window.Window):
 
         # Black background
         glClearColor(0.0, 0.0, 0.0, 1.0 )
-
-        pyglet.clock.schedule_interval(self._update, 1.0/60.0)
 
     def on_draw(self):
         self.clear()
@@ -65,9 +52,6 @@ class Window(pyglet.window.Window):
         glColor3ub(0,0,255)
         glVertex3f(-200.0, -70.0, 0.0)
         glEnd();
-
-    def _update(self, dt):
-        pass
 
     def on_resize(self, w, h):
         # Prevent a divide by zero, when window is too short
@@ -99,12 +83,6 @@ class Window(pyglet.window.Window):
             -windowHeight, windowHeight,
             1.0, -1.0)
     
-    def on_key_press(self, sym, mods):
-        super(Window, self).on_key_press(sym, mods)
-    
-    def on_close(self):
-        pyglet.clock.unschedule(self._update)
-        super(Window, self).on_close()
 
 if __name__ == '__main__':
     window = Window()

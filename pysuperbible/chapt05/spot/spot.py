@@ -44,15 +44,31 @@ mode_names = (
 )
 
 
-def vecf(*args):
-    """return ctypes array of GLfloat for Pyglet's OpenGL interface.
-    args -> Either vararg floats, or args[0] as an interable float container
-    If using module OpenGL.GL directly you don't need this conversion.
+def gl_vec(typ, *args):
+    """return ctypes array of GLwhatever for Pyglet's OpenGL interface. (This
+    seems to work for all types, but it does almost no type conversion. Just
+    think in terms of "C without type casting".)
+    typ -> ctype or GL name for ctype; see pyglet.gl.GLenum through GLvoid
+    args -> Either vararg, or args[0] as an iterable container
+    Examples:
+        # Float
+        ar = gl_vec(GLfloat, 0.0, 1.0, 0.0)
+        ar = gl_vec(GLfloat, [0.0, 1.0, 0.0])
+        # Unsigned byte
+        ar = gl_vec(GLubyte, 'a','b','c')
+        ar = gl_vec(GLubyte, 'abc')
+        ar = gl_vec(GLubyte, ['a','b','c'])
+        ar = gl_vec(GLubyte, 97, 98, 99)
     """
-    if len(args) > 1:
-        return (GLfloat * len(args))(*args)
+    if len(args) == 1:
+        if isinstance(args[0],(tuple,list)):
+            args = args[0]
+        elif isinstance(args[0],str) and len(args[0]) > 1:
+            args = args[0]
+    if isinstance(args[0], str) and typ is GLubyte:
+        return (typ * len(args))(*[ord(c) for c in args])
     else:
-        return (GLfloat * len(args[0]))(*args[0])
+        return (typ * len(args))(*args)
 
 
 class Window(pyglet.window.Window):
@@ -65,11 +81,11 @@ class Window(pyglet.window.Window):
     yRot = 0.0
 
     # Light values and coordinates
-    lightPos = M3DVector4f(0.0, 0.0, 75.0, 1.0)
-    specular = M3DVector4f(1.0, 1.0, 1.0, 1.0)
-    specref =  M3DVector4f(1.0, 1.0, 1.0, 1.0)
-    ambientLight = M3DVector4f(0.5, 0.5, 0.5, 1.0)
-    spotDir = M3DVector3f(0.0, 0.0, -1.0)
+    lightPos = gl_vec(GLfloat, 0.0, 0.0, 75.0, 1.0)
+    specular = gl_vec(GLfloat, 1.0, 1.0, 1.0, 1.0)
+    specref =  gl_vec(GLfloat, 1.0, 1.0, 1.0, 1.0)
+    ambientLight = gl_vec(GLfloat, 0.5, 0.5, 0.5, 1.0)
+    spotDir = gl_vec(GLfloat, 0.0, 0.0, -1.0)
 
     def __init__(self, w, h, title='Pyglet App'):
         super(Window, self).__init__(w, h, title)
@@ -83,12 +99,12 @@ class Window(pyglet.window.Window):
 
         # Setup and enable light 0
         # Supply a slight ambient light so the objects can be seen
-        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, vecf(self.ambientLight))
+        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, self.ambientLight)
         
         # The light is composed of just a diffuse and specular components
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, vecf(self.ambientLight))
-        glLightfv(GL_LIGHT0, GL_SPECULAR, vecf(self.specular))
-        glLightfv(GL_LIGHT0, GL_POSITION, vecf(self.lightPos))
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, self.ambientLight)
+        glLightfv(GL_LIGHT0, GL_SPECULAR, self.specular)
+        glLightfv(GL_LIGHT0, GL_POSITION, self.lightPos)
 
         # Specific spot effects
         # Cut off angle is 60 degrees
@@ -105,7 +121,7 @@ class Window(pyglet.window.Window):
 
         # All materials hereafter have full specular reflectivity
         # with a high shine
-        glMaterialfv(GL_FRONT, GL_SPECULAR, vecf(self.specref))
+        glMaterialfv(GL_FRONT, GL_SPECULAR, self.specref)
         glMateriali(GL_FRONT, GL_SHININESS, 128)
 
 
@@ -130,8 +146,8 @@ class Window(pyglet.window.Window):
         glRotatef(self.xRot, 1.0, 0.0, 0.0)
 
         # Specify new position and direction in rotated coords.
-        glLightfv(GL_LIGHT0, GL_POSITION, vecf(self.lightPos))
-        glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, vecf(self.spotDir))
+        glLightfv(GL_LIGHT0, GL_POSITION, self.lightPos)
+        glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, self.spotDir)
 
         # Draw a red cone to enclose the light source
         glColor3ub(255,0,0)
@@ -225,5 +241,5 @@ class Window(pyglet.window.Window):
         super(Window, self).on_close()
 
 if __name__ == '__main__':
-    window = Window(800, 600, 'Spot Light')
+    window = Window(800, 600, 'Spot Light (arrows=Spotlight s=Smooth t=Tesselation)')
     pyglet.app.run()

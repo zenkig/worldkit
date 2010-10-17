@@ -22,15 +22,31 @@ from gltools import *
 from math3d import *
 
 
-def vecf(*args):
-    """return ctypes array of GLfloat for Pyglet's OpenGL interface.
-    args -> Either vararg floats, or args[0] as an interable float container
-    If using module OpenGL.GL directly you don't need this conversion.
+def gl_vec(typ, *args):
+    """return ctypes array of GLwhatever for Pyglet's OpenGL interface. (This
+    seems to work for all types, but it does almost no type conversion. Just
+    think in terms of "C without type casting".)
+    typ -> ctype or GL name for ctype; see pyglet.gl.GLenum through GLvoid
+    args -> Either vararg, or args[0] as an iterable container
+    Examples:
+        # Float
+        ar = gl_vec(GLfloat, 0.0, 1.0, 0.0)
+        ar = gl_vec(GLfloat, [0.0, 1.0, 0.0])
+        # Unsigned byte
+        ar = gl_vec(GLubyte, 'a','b','c')
+        ar = gl_vec(GLubyte, 'abc')
+        ar = gl_vec(GLubyte, ['a','b','c'])
+        ar = gl_vec(GLubyte, 97, 98, 99)
     """
-    if len(args) > 1:
-        return (GLfloat * len(args))(*args)
+    if len(args) == 1:
+        if isinstance(args[0],(tuple,list)):
+            args = args[0]
+        elif isinstance(args[0],str) and len(args[0]) > 1:
+            args = args[0]
+    if isinstance(args[0], str) and typ is GLubyte:
+        return (typ * len(args))(*[ord(c) for c in args])
     else:
-        return (GLfloat * len(args[0]))(*args[0])
+        return (typ * len(args))(*args)
 
 
 class Window(pyglet.window.Window):
@@ -44,7 +60,7 @@ class Window(pyglet.window.Window):
 
         # Light values
         # Bright white light
-        ambientLight = M3DVector4f(1.0, 1.0, 1.0, 1.0)
+        ambientLight = gl_vec(GLfloat, 1.0, 1.0, 1.0, 1.0)
 
         glEnable(GL_DEPTH_TEST) # Hidden surface removal
         glEnable(GL_CULL_FACE)  # Do not calculate inside of jet
@@ -54,7 +70,7 @@ class Window(pyglet.window.Window):
         glEnable(GL_LIGHTING)   # Enable lighting	
 
         # Set light model to use ambient light specified by ambientLight
-        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, vecf(ambientLight))
+        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientLight)
 
         glEnable(GL_COLOR_MATERIAL) # Enable Material color tracking
 

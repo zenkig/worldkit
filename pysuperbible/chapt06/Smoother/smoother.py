@@ -24,17 +24,6 @@ from math3d import *
 from glframe import GLFrame
 
 
-def vecf(*args):
-    """return ctypes array of GLfloat for Pyglet's OpenGL interface.
-    args -> Either vararg floats, or args[0] as an interable float container
-    If using module OpenGL.GL directly you don't need this conversion.
-    """
-    if len(args) > 1:
-        return (GLfloat * len(args))(*args)
-    else:
-        return (GLfloat * len(args[0]))(*args[0])
-
-
 class Window(pyglet.window.Window):
 
     # Array of small stars
@@ -194,5 +183,5 @@ class Window(pyglet.window.Window):
         super(Window, self).on_close()
 
 if __name__ == '__main__':
-    window = Window('Smoothing Out The Jaggies')
+    window = Window('Smoothing Out The Jaggies (Press space to toggle)')
     pyglet.app.run()
