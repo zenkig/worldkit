@@ -173,39 +173,46 @@ class Window(pyglet.window.Window):
         # Restore the matrix state
         glPopMatrix()
 
+        # Menu is drawn after all world rendering.
         if self.menu is not None:
-            super(Window, self).on_resize(self.width, self.height)
-            glPushMatrix()
-            self.menu.draw()
-            glPopMatrix()
-            self.on_resize(self.width, self.height)
+            self._draw_menu()
+
+    def _draw_menu(self):
+        super(Window, self).on_resize(self.width, self.height)
+        glPushMatrix()
+        self.menu.draw()
+        glPopMatrix()
+        self.on_resize(self.width, self.height)
 
     def _update(self, dt):
         if self.zoom != 0.0:
             self.zPos += self.zoom
 
         if self.menu_option is not None:
-            print 'menu option',self.menu_items[self.menu_option]
-            for tex in [im.get_mipmapped_texture().id for im in self.images]:
-                glBindTexture(GL_TEXTURE_2D, tex)
-                if self.menu_option == 0:
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-                elif self.menu_option == 1:
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-                elif self.menu_option == 2:
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST)
-                elif self.menu_option == 3:
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR)
-                elif self.menu_option == 4:
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST)
-                elif self.menu_option == 5:
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
-                elif self.menu_option == 6:
-                    fLargest = glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT)
-                    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest)
-                elif self.menu_option == 7:
-                    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1.0)
-            self.menu_option = None
+            self._handle_menu()
+    
+    def _handle_menu(self):
+        print 'menu option',self.menu_items[self.menu_option]
+        for tex in [im.get_mipmapped_texture().id for im in self.images]:
+            glBindTexture(GL_TEXTURE_2D, tex)
+            if self.menu_option == 0:
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+            elif self.menu_option == 1:
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+            elif self.menu_option == 2:
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST)
+            elif self.menu_option == 3:
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR)
+            elif self.menu_option == 4:
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST)
+            elif self.menu_option == 5:
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+            elif self.menu_option == 6:
+                fLargest = glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT)
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest)
+            elif self.menu_option == 7:
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1.0)
+        self.menu_option = None
 
     def on_resize(self, w, h):
         # Prevent a divide by zero
@@ -244,9 +251,9 @@ class Window(pyglet.window.Window):
         self.menu = SimpleMenu(self, x, y, self.menu_items)
         @self.menu.event
         def on_close(selected_option):
-            del (self.menu)
             if selected_option is not None:
                 self.menu_option = self.menu_items.index(selected_option)
+            self.menu = None
         return pyglet.event.EVENT_HANDLED
 
     def on_close(self):
