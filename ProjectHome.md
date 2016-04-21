@@ -1,0 +1,1 @@
+Framework for the game, the world, the objects in it, and interactivity. Add your own graphics, input/sound/display devices, and game rules.
